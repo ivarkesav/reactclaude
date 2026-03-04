@@ -118,3 +118,25 @@ test("getSession returns null for an empty cookie value", async () => {
   const session = await getSession();
   expect(session).toBeNull();
 });
+
+test("deleteSession deletes the auth-token cookie", async () => {
+  await deleteSession();
+
+  expect(mockDelete).toHaveBeenCalledTimes(1);
+  expect(mockDelete).toHaveBeenCalledWith("auth-token");
+});
+
+test("deleteSession invalidates an existing session", async () => {
+  await createSession("user-123", "test@example.com");
+  const [, token] = mockSet.mock.calls[0];
+  mockGet.mockReturnValue({ value: token });
+
+  const sessionBefore = await getSession();
+  expect(sessionBefore).not.toBeNull();
+
+  await deleteSession();
+  mockGet.mockReturnValue(undefined);
+
+  const sessionAfter = await getSession();
+  expect(sessionAfter).toBeNull();
+});
